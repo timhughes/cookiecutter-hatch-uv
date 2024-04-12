@@ -1,6 +1,6 @@
 [![CI Tests](https://github.com/timhughes/cookiecutter-poetry/actions/workflows/ci-tests.yml/badge.svg)](https://github.com/timhughes/cookiecutter-poetry/actions/workflows/ci-tests.yml)
 
-# cookiecutter-poetry
+# cookiecutter-hatch-uv
 
 Cookiecutter template configured with the following:
 
