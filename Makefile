@@ -16,7 +16,7 @@ pydoc: ## Run a pydoc server and open the browser
 	poetry run python -m pydoc -b
 
 install: ## Run `poetry install`
-	poetry install
+	hatch install
 
 showdeps: ## run poetry to show deps
 	@echo "CURRENT:"
@@ -34,5 +34,5 @@ format: ## Formats you code with Black
 	poetry run black tests hooks
 
 test: hidden ## run pytest with coverage
-	poetry run pytest -v tests
+	hatch run test
 

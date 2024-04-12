@@ -24,8 +24,8 @@ docs: ## Build and serve the documentation with live reloading on file changes
 	poetry run sphinx-autobuild --open-browser docs docs/_build
 
 install: ## Run `poetry install`
-	poetry install
-	
+	hatch env create
+
 showdeps: ## run poetry to show deps
 	@echo "CURRENT:"
 	poetry show --tree
@@ -53,7 +53,7 @@ build: install lint test ## run `poetry build` to build source distribution and 
 bumpversion: build ## bumpversion
 	poetry run bump2version --tag --current-version $$(git describe --tags --abbrev=0) --tag-name '{new_version}' patch
 	git push
-	git push --tags 
+	git push --tags
 
 {%- if cookiecutter.command_line_interface != "no cli" %}
 pyinstaller: install lint test ## Create a binary executable using pyinstaller

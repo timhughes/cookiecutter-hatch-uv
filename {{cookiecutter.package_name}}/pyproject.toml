@@ -1,18 +1,16 @@
 [build-system]
-requires = ["poetry_core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.poetry]
+[project]
 name = "{{ cookiecutter.package_name }}"
 version = "{{ cookiecutter.version }}"
 description = "{{ cookiecutter.short_description }}"
-authors = ["{{ cookiecutter.author }} <{{ cookiecutter.email }}>"]
+authors = [{ name = "{{ cookiecutter.author }}", email = "{{ cookiecutter.email }}" }]
 # Use identifier from https://spdx.org/licenses/
 license = "{{ cookiecutter.license }}"
 readme = "README.md"
-homepage = "https://github.com/{{ cookiecutter.github_user }}/{{ cookiecutter.package_name }}"
-repository = "https://github.com/{{ cookiecutter.github_user }}/{{ cookiecutter.package_name }}"
-documentation = "README.md"
+
 classifiers = [
     # https://pypi.org/classifiers/
     {%- if cookiecutter.command_line_interface != "no cli" %}
@@ -26,66 +24,90 @@ packages = [
 ]
 {%- endif %}
 
-[tool.poetry.urls]
+[project.urls]
 # If you publish you package on PyPI, these will appear in the Project Links section.
-"Bug Tracker" = "https://github.com/{{ cookiecutter.github_user }}/{{ cookiecutter.package_name }}/issues"
+Issues = "https://github.com/{{ cookiecutter.github_user }}/{{ cookiecutter.package_name }}/issues"
+Homepage = "https://github.com/{{ cookiecutter.github_user }}/{{ cookiecutter.package_name }}"
+Repository = "https://github.com/{{ cookiecutter.github_user }}/{{ cookiecutter.package_name }}"
 
-[tool.poetry.scripts]
+[project.scripts]
 {%- if cookiecutter.command_line_interface != "no cli" %}
 {{ cookiecutter.package_name }} = "{{ cookiecutter.module_name }}.__main__:cli"
 {%- endif %}
-
-[tool.poetry.dependencies]
-python = "^3.10.0"
+require-python = ">=3.10"
+dependencies = [
 {%- if cookiecutter.command_line_interface == "click" %}
-click = "*"
+    "click",
 {%- endif %}
 {%- if cookiecutter.use_jupyterlab == "y" %}
-jupyterlab = "*"
-pandas = "*"
-jupyterlab_git = "*"
-jupyterlab_widgets = "*"
+    "jupyterlab",
+    "pandas",
+    "jupyterlab_git",
+    "jupyterlab_widgets",
 {%- endif %}
+]
 
-[tool.poetry.group.test.dependencies]
-bandit = "*"
-black = "*"
-bump2version = "*"
-flake8 = "*"
-isort = "*"
-jedi-language-server = "*"
-mypy = "*"
-pylint = "*"
-pytest = "*"
-pytest-cov = "*"
-reorder-python-imports = "*"
-vulture = "*"
-typeguard = "*"
-pre-commit = "*"
-pre-commit-hooks = "*"
-pyupgrade = "*"
-darglint = "*"
+
+[project.optional-dependencies]
+test = [
+    "bandit",
+    "black",
+    "bump2version",
+    "flake8",
+    "isort",
+    "jedi-language-server",
+    "mypy",
+    "pylint",
+    "pytest",
+    "pytest-cov",
+    "reorder-python-imports",
+    "vulture",
+    "typeguard",
+    "pre-commit",
+    "pre-commit-hooks",
+    "pyupgrade",
+    "darglint",
 {%- if cookiecutter.command_line_interface != "no cli" %}
-pyinstaller = "*"
+    "pyinstaller"
 {%- endif %}
+]
+docs = [
+    "furo",
+    "myst_parser",
+    "sphinx",
+    "sphinx-autobuild",
+    "sphinx-click",
+]
 
-[tool.poetry.group.docs.dependencies]
-furo = "*"
-myst_parser = "*"
-sphinx = "*"
-sphinx-autobuild = "*"
-sphinx-click = "*"
+[tool.hatch.env]
+requires = ["hatch-pip-compile"]
 
-[tool.isort]
-profile = "black"
+[tool.hatch.envs.default]
+python = "3.12"
+dependencies = ["coverage[toml]>=6.5", "pytest"]
+[tool.hatch.envs.default.scripts]
+test = "pytest {args:tests}"
+test-cov = "coverage run -m pytest {args:tests}"
+cov-report = ["- coverage combine", "coverage report"]
+cov = ["test-cov", "cov-report"]
 
-[tool.black]
-target-version = ['py311']
-strict = true
-warn_unreachable = true
-pretty = true
-show_column_numbers = true
-show_error_context = true
+[tool.hatch.envs.lint]
+detached = true
+skip-install = true
+dependencies = ["ruff"]
+# type = "pip-compile"
+# pip-compile-resolver = "uv"
+# pip-compile-installer = "uv"
+
+[tool.hatch.envs.lint.scripts]
+format = ["ruff check --fix hooks tests"]
+[[tool.hatch.envs.all.matrix]]
+python = ["3.8", "3.9", "3.10", "3.11", "3.12"]
+
+[tool.hatch.envs.types]
+dependencies = ["mypy>=1.0.0"]
+[tool.hatch.envs.types.scripts]
+check = "mypy --install-types --non-interactive {args:src/check_fastapi tests}"
 
 [tool.ruff]
 select = ["ALL"]
@@ -101,16 +123,27 @@ lines-after-imports = 2
     "S311", # Standard pseudo-random generators are not suitable for cryptographic purposes
 ]
 
-[tool.bandit]
-[tool.bandit.assert_used]
-skips = ['*_test.py', '*/test_*.py']
 
 [tool.pytest.ini_options]
-pythonpath = [
-  "src"
-]
+pythonpath = ["src"]
+testpaths = ["tests"]
 # Example
 filterwarnings = [
     "ignore::DeprecationWarning:moto.*:",
     "ignore::DeprecationWarning:boto.*:",
 ]
+
+
+
+[tool.coverage.run]
+source_pkgs = ["{{ cookiecutter.package_name }}", "tests"]
+branch = true
+parallel = true
+omit = ["src/{{ cookiecutter.package_name }}/__about__.py"]
+
+[tool.coverage.paths]
+check_fastapi = ["src/{{ cookiecutter.package_name }}", "*/{{ cookiecutter.package_name }}/src/{{ cookiecutter.package_name }}"]
+tests = ["tests", "*/{{ cookiecutter.package_name }}/tests"]
+
+[tool.coverage.report]
+exclude_lines = ["no cov", "if __name__ == .__main__.:", "if TYPE_CHECKING:"]

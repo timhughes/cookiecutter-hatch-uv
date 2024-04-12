@@ -1,64 +1,87 @@
 [build-system]
-requires = ["poetry_core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.poetry]
-name = "cookiecutter-poetry"
+[project]
+name = "cookiecutter-hatch-uv"
 version = "0.0.1"
-description = "Cookiecutter template for python with poetry and pytest"
-authors = [
-    "Tim Hughes <thughes@thegoldfish.org>",
-]
+description = "Cookiecutter template for python with hatch, uv, ruff, m and pytest"
+authors = [{ name = "Tim Hughes", email = "thughes@thegoldfish.org" }]
 # Use identifier from https://spdx.org/licenses/
 license = "MIT"
 readme = "README.md"
-homepage = "https://github.com/timhughes/cookiecutter-poetry"
-repository = "https://github.com/timhughes/cookiecutter-poetry"
-documentation = "https://github.com/timhughes/cookiecutter-poetry/blob/master/README.md"
+
 classifiers = [
     # https://pypi.org/classifiers/
-    "Environment :: Console",
-    "Development Status :: 1 - Planning",
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
 ]
+requires-python = ">=3.10"
+dependencies = ["cookiecutter"]
 
-[tool.poetry.urls]
+[project.urls]
 # If you publish you package on PyPI, these will appear in the Project Links section.
-"Bug Tracker" = "https://github.com/timhughes/cookiecutter-poetry/issues"
+Issues = "https://github.com/timhughes/cookiecutter-hatch-uv/issues"
+Homepage = "https://github.com/timhughes/cookiecutter-hatch-uv"
+Source = "https://github.com/timhughes/cookiecutter-hatch-uv"
+Documentation = "https://github.com/timhughes/cookiecutter-hatch-uv/blob/master/README.md"
 
-[tool.poetry.dependencies]
-python = "^3.10.0"
-cookiecutter = "*"
+[tool.hatch.env]
+requires = ["hatch-pip-compile"]
+
+[tool.hatch.envs.default]
+detached = true
+skip-install = true
+python = "3.12"
+dependencies = ["mypy", "pytest", "pytest-cookies", "pytest-cov"]
+# type = "pip-compile"
+# pip-compile-resolver = "uv"
+# pip-compile-installer = "uv"
+
+[tool.hatch.envs.default.scripts]
+test = "pytest {args:tests}"
+test-cov = "coverage run -m pytest {args:tests}"
+cov-report = ["- coverage combine", "coverage report"]
+cov = ["test-cov", "cov-report"]
 
 
-[tool.poetry.group.test.dependencies]
-bandit = "*"
-black = "*"
-bump2version = "*"
-flake8 = "*"
-isort = "*"
-jedi-language-server = "*"
-mypy = "*"
-pyinstaller = "*"
-pylint = "*"
-pytest = "*"
-pytest-cookies = "*"
-pytest-cov = "*"
-reorder-python-imports = "*"
-vulture = "*"
+[[tool.hatch.envs.all.matrix]]
+python = ["3.8", "3.9", "3.10", "3.11", "3.12"]
 
-[tool.isort]
-profile = "black"
+[tool.hatch.envs.types]
+dependencies = ["mypy>=1.0.0"]
+[tool.hatch.envs.types.scripts]
+check = [
+    "mkdir -p .mypy_cache",
+    "mypy --install-types --non-interactive {args:hooks tests}",
+]
+[tool.hatch.envs.lint]
+detached = true
+skip-install = true
+dependencies = ["ruff"]
+# type = "pip-compile"
+# pip-compile-resolver = "uv"
+# pip-compile-installer = "uv"
 
-[tool.black]
-target-version = ['py311']
+[tool.hatch.envs.lint.scripts]
+run = ["ruff check --fix hooks tests"]
 
 [tool.pytest.ini_options]
-# Example
-pythonpath = [
-  "src"
-]
-filterwarnings = [
-    "ignore::DeprecationWarning:moto.*:",
-    "ignore::DeprecationWarning:boto.*:",
-]
+pythonpath = ["src"]
+testpaths = ["tests"]
 
+[tool.coverage.run]
+source_pkgs = ["check_fastapi", "tests"]
+branch = true
+parallel = true
+omit = ["src/check_fastapi/__about__.py"]
+
+[tool.coverage.paths]
+check_fastapi = ["src/check_fastapi", "*/check-fastapi/src/check_fastapi"]
+tests = ["tests", "*/check-fastapi/tests"]
+
+[tool.coverage.report]
+exclude_lines = ["no cov", "if __name__ == .__main__.:", "if TYPE_CHECKING:"]
